@@ -62,6 +62,14 @@ pivot["sub_PM10"]  = pivot["PM10"].apply(lambda x: sub_index_pm10(x) if pd.notnu
 
 pivot["AQI"] = pivot[["sub_PM2.5","sub_PM10"]].max(axis=1)
 
+# ---------- Step 4.5: Cleaning ----------
+# Drop rows where AQI target is missing
+pivot = pivot.dropna(subset=["AQI"])
+
+# Fill missing pollutant values with 0
+for col in ["PM2.5","PM10","NO2","SO2","CO","OZONE","NH3"]:
+    pivot[col] = pivot[col].fillna(0)
+
 # ---------- Step 5: Features ----------
 feature_cols_numeric = ["PM2.5","PM10","NO2","SO2","CO","OZONE","NH3",
                         "latitude","longitude","month","hour","dayofweek"]
@@ -81,7 +89,7 @@ pipe = Pipeline([
     ("model", RandomForestRegressor(n_estimators=100, random_state=42))
 ])
 
-X_train, X_test, y_train, y_test = train_test_split(X,y,test_size=0.2,random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 pipe.fit(X_train, y_train)
 
 print("Model trained, R²:", r2_score(y_test, pipe.predict(X_test)))
